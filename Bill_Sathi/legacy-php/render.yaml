@@ -1,0 +1,5 @@
+databases:
+  - name: bill-sathi-db
+    databaseName: finance_dashboard
+    user: bill_sathi_user
+    plan: free

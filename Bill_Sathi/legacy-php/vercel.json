@@ -1,0 +1,37 @@
+{
+  "functions": {
+    "api/index.php": {
+      "runtime": "vercel-php@0.6.2"
+    }
+  },
+  "routes": [
+    {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|ico|md|pptx|docx|woff|woff2|ttf|eot))",
+      "dest": "/$1"
+    },
+    {
+      "src": "/\\.env.*",
+      "status": 404
+    },
+    {
+      "src": "/database/.*",
+      "status": 404
+    },
+    {
+      "src": "/config/.*",
+      "status": 404
+    },
+    {
+      "src": "/vendor/.*",
+      "status": 404
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.php"
+    }
+  ]
+}

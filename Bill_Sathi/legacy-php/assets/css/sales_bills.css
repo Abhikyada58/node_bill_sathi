@@ -1,0 +1,190 @@
+/* ============================================
+   Finance ERP - Sales Bills Custom CSS (Blue & White)
+   ============================================ */
+
+/* Main Layout Fixes for Sidebar integration */
+.main-content {
+    background-color: var(--color-bg-primary);
+}
+
+/* Rounded Cards */
+.card {
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+    background: #ffffff;
+    transition: box-shadow var(--transition-fast);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+/* Badge Tweaks */
+.badge {
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+}
+
+.badge-paid {
+    background-color: rgba(16, 185, 129, 0.08);
+    color: var(--color-success);
+}
+
+.badge-partial {
+    background-color: rgba(245, 158, 11, 0.08);
+    color: var(--color-warning);
+}
+
+.badge-unpaid {
+    background-color: rgba(239, 68, 68, 0.08);
+    color: var(--color-danger);
+}
+
+/* Action Icons */
+.action-btn-grp {
+    display: flex;
+    gap: 6px;
+}
+
+.action-icon {
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-fast);
+    cursor: pointer;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+}
+
+.action-icon:hover {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+    background-color: rgba(37, 99, 235, 0.03);
+}
+
+.action-icon.delete:hover {
+    color: var(--color-danger);
+    border-color: var(--color-danger);
+    background-color: rgba(239, 68, 68, 0.03);
+}
+
+/* Split View form layouts */
+.summary-panel {
+    background: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--border-color);
+    font-size: var(--font-size-sm);
+}
+
+.summary-row:last-child {
+    border-bottom: none;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+/* Dynamic Product Table spacing */
+.product-table th {
+    background-color: #f1f5f9 !important;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+.product-table td {
+    vertical-align: middle;
+}
+
+.product-table input,
+.product-table select {
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    padding: 6px 10px;
+    font-size: var(--font-size-sm);
+}
+
+/* Filter Dropdown box */
+.filter-dropdown-menu {
+    min-width: 320px;
+    padding: 16px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+}
+
+/* Timeline/Audit Log styles */
+.timeline {
+    position: relative;
+    padding-left: 24px;
+    margin-top: 12px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 6px;
+    bottom: 6px;
+    width: 2px;
+    background: var(--border-color);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 16px;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -24px;
+    top: 6px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    border: 2px solid #ffffff;
+}
+
+.timeline-time {
+    font-size: 11px;
+    color: var(--color-text-muted);
+}
+
+.timeline-desc {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* Print Invoice styling */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #invoice-print-area, #invoice-print-area * {
+        visibility: visible;
+    }
+    #invoice-print-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        color: #000 !important;
+        background: #fff !important;
+    }
+    .no-print {
+        display: none !important;
+    }
+}
