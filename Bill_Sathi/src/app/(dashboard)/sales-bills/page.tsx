@@ -1,12 +1,12 @@
-import { FileText } from "lucide-react";
-import { ModulePlaceholder } from "@/components/dashboard/module-placeholder";
+import { getSalesBills } from "@/actions/sales-bills";
+import { SalesBillClient } from "./sales-bill-client";
 
-export default function SalesBillsPage() {
+export default async function SalesBillsPage() {
+  const bills = await getSalesBills();
+  
   return (
-    <ModulePlaceholder
-      title="Sales Bill"
-      description="Create and manage customer sales invoices with GST and TDS/TCS."
-      icon={FileText}
-    />
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      <SalesBillClient initialData={bills} />
+    </div>
   );
 }
