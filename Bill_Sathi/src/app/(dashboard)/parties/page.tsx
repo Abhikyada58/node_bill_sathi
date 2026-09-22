@@ -1,12 +1,12 @@
-import { Users } from "lucide-react";
-import { ModulePlaceholder } from "@/components/dashboard/module-placeholder";
+import { getPartiesWithBalances } from "@/actions/parties";
+import { PartyClient } from "./party-client";
 
-export default function PartiesPage() {
+export default async function ManagePartyPage() {
+  const parties = await getPartiesWithBalances();
+  
   return (
-    <ModulePlaceholder
-      title="Manage Party"
-      description="Maintain your customers and suppliers in one place."
-      icon={Users}
-    />
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6 bg-slate-50 min-h-screen">
+      <PartyClient initialData={parties} />
+    </div>
   );
 }
