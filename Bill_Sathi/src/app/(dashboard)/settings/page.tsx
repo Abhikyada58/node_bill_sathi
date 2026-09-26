@@ -1,12 +1,18 @@
-import { Settings } from "lucide-react";
-import { ModulePlaceholder } from "@/components/dashboard/module-placeholder";
+import { getProfileSettings } from "@/actions/settings";
+import { SettingsForm } from "./settings-form";
+import { redirect } from "next/navigation";
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  let profile = null;
+  try {
+    profile = await getProfileSettings();
+  } catch (error) {
+    redirect("/login");
+  }
+  
   return (
-    <ModulePlaceholder
-      title="Setting"
-      description="Manage your profile, security and application preferences."
-      icon={Settings}
-    />
+    <div className="flex-1 p-4 md:p-8 pt-6 bg-slate-50 min-h-screen">
+      <SettingsForm initialData={profile} />
+    </div>
   );
 }
