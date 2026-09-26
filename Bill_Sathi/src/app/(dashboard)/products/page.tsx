@@ -1,12 +1,12 @@
-import { Box } from "lucide-react";
-import { ModulePlaceholder } from "@/components/dashboard/module-placeholder";
+import { getProducts } from "@/actions/products";
+import { ProductClient } from "./product-client";
 
-export default function ProductsPage() {
+export default async function ProductsPage() {
+  const products = await getProducts();
+  
   return (
-    <ModulePlaceholder
-      title="Product"
-      description="Manage your product catalog, pricing and stock."
-      icon={Box}
-    />
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6 bg-slate-50 min-h-screen">
+      <ProductClient initialData={products} />
+    </div>
   );
 }

@@ -12,7 +12,7 @@ create type payment_mode as enum ('Cash', 'Bank Transfer', 'UPI', 'Cheque');
 
 -- 1. Profiles (mirrors legacy `users` table; 1:1 with auth.users)
 create table if not exists profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
+  id uuid primary key references auth.users(id) `on delete cascade,
   full_name varchar(100) not null,
   email varchar(255) not null unique,
   avatar_url varchar(500),
