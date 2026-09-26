@@ -24,6 +24,7 @@ export async function getSalesBillById(id: number) {
     .from("sales_bills")
     .select(`
       *,
+      parties (*),
       sales_bill_items (*)
     `)
     .eq("id", id)
@@ -171,3 +172,5 @@ export async function deleteSalesBill(id: number) {
   revalidatePath("/sales-bills")
   return { success: true }
 }
+
+

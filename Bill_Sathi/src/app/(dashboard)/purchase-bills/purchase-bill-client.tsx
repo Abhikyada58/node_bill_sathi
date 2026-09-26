@@ -121,9 +121,11 @@ export function PurchaseBillClient({ initialData }: PurchaseBillClientProps) {
                           <Button variant="ghost" size="icon">
                             <CreditCard className="h-4 w-4 text-gray-500" />
                           </Button>
-                          <Button variant="ghost" size="icon">
-                            <Printer className="h-4 w-4 text-gray-500" />
-                          </Button>
+                          <Link href={`/purchase-bills/${bill.id}/print`}>
+                            <Button variant="ghost" size="icon">
+                              <Printer className="h-4 w-4 text-gray-500" />
+                            </Button>
+                          </Link>
                           <Button variant="ghost" size="icon">
                             <Download className="h-4 w-4 text-gray-500" />
                           </Button>

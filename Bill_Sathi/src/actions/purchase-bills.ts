@@ -81,3 +81,20 @@ export async function deletePurchaseBill(id: number) {
   revalidatePath("/purchase-bills")
   return { success: true }
 }
+
+export async function getPurchaseBillById(id: number) {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("purchases")
+    .select(`
+      *,
+      parties (*),
+      purchase_bill_items (*)
+    `)
+    .eq("id", id)
+    .single()
+
+  if (error) throw new Error(error.message)
+  return data
+}
+

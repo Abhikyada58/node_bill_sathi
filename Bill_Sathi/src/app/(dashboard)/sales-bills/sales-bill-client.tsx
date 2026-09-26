@@ -109,9 +109,11 @@ export function SalesBillClient({ initialData }: SalesBillClientProps) {
                           <Button variant="ghost" size="icon" onClick={() => handlePayment(bill)}>
                             <CreditCard className="h-4 w-4 text-blue-500" />
                           </Button>
-                          <Button variant="ghost" size="icon">
-                            <Printer className="h-4 w-4" />
-                          </Button>
+                          <Link href={`/sales-bills/${bill.id}/print`}>
+                            <Button variant="ghost" size="icon">
+                              <Printer className="h-4 w-4 text-slate-500" />
+                            </Button>
+                          </Link>
                           <Button variant="ghost" size="icon">
                             <Download className="h-4 w-4" />
                           </Button>
