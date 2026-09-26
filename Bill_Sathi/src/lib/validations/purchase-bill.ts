@@ -20,11 +20,11 @@ export const purchaseBillSchema = z.object({
   supplier_id: z.coerce.number().min(1, "Supplier is required"),
   bill_number: z.string().min(1, "Bill number is required"),
   bill_date: z.date({
-    required_error: "Bill date is required",
+    error: "Bill date is required",
   }),
   due_days: z.coerce.number().min(0).default(0),
   due_date: z.date({
-    required_error: "Due date is required",
+    error: "Due date is required",
   }),
   apply_gst: z.boolean().default(true),
   discount_percent: z.coerce.number().min(0).default(0),

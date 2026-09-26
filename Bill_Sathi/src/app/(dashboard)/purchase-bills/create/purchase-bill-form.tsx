@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useForm, useFieldArray } from "react-hook-form"
+import { useForm, useFieldArray, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
 import { CalendarIcon, Plus, Trash, UploadCloud } from "lucide-react"
@@ -31,7 +31,7 @@ export function PurchaseBillForm({ parties, products }: PurchaseBillFormProps) {
   const router = useRouter()
 
   const form = useForm<PurchaseBillFormValues>({
-    resolver: zodResolver(purchaseBillSchema),
+    resolver: zodResolver(purchaseBillSchema) as Resolver<PurchaseBillFormValues>,
     defaultValues: {
       supplier_id: 0,
       bill_number: "",
@@ -252,7 +252,7 @@ export function PurchaseBillForm({ parties, products }: PurchaseBillFormProps) {
                             mode="single"
                             selected={field.value}
                             onSelect={field.onChange}
-                            initialFocus
+                            autoFocus
                           />
                         </PopoverContent>
                       </Popover>
@@ -407,7 +407,7 @@ export function PurchaseBillForm({ parties, products }: PurchaseBillFormProps) {
               variant="outline"
               size="sm"
               className="text-blue-500 border-blue-200 bg-blue-50 hover:bg-blue-100"
-              onClick={() => append({ product_id: 0, product_name: "", quantity: 1, rate: 0, discount_percent: 0, amount: 0, unit: "Pcs" })}
+              onClick={() => append({ product_id: 0, product_name: "", quantity: 1, rate: 0, discount_percent: 0, amount: 0, unit: "Pcs", gst_percent: 0, gst_amount: 0 })}
             >
               <Plus className="mr-2 h-4 w-4" /> ADD PRODUCT
             </Button>

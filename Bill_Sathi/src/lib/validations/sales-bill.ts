@@ -17,11 +17,11 @@ export const salesBillSchema = z.object({
   customer_id: z.coerce.number().min(1, "Customer is required"),
   bill_number: z.string().min(1, "Bill number is required"),
   bill_date: z.date({
-    required_error: "Bill date is required",
+    error: "Bill date is required",
   }),
   due_days: z.coerce.number().min(0),
   due_date: z.date({
-    required_error: "Due date is required",
+    error: "Due date is required",
   }),
   challan_no: z.string().optional().nullable(),
   challan_date: z.date().optional().nullable(),
@@ -45,7 +45,7 @@ export type SalesBillFormValues = z.infer<typeof salesBillSchema>;
 export const paymentSchema = z.object({
   bill_id: z.coerce.number(),
   payment_date: z.date({
-    required_error: "Payment date is required",
+    error: "Payment date is required",
   }),
   transaction_amount: z.coerce.number().min(0.01, "Amount must be greater than 0"),
   payment_mode: z.enum(["Cash", "Bank Transfer", "UPI", "Cheque"]),

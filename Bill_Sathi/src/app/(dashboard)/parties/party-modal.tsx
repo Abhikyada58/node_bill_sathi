@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useForm } from "react-hook-form"
+import { useForm, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 import { X } from "lucide-react"
@@ -40,7 +40,7 @@ export function PartyModal({ isOpen, onClose, party }: PartyModalProps) {
   const router = useRouter()
 
   const form = useForm<PartyFormValues>({
-    resolver: zodResolver(partySchema),
+    resolver: zodResolver(partySchema) as Resolver<PartyFormValues>,
     defaultValues: {
       gst_number: "",
       pan_number: "",

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useForm } from "react-hook-form"
+import { useForm, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 import { format } from "date-fns"
@@ -45,7 +45,7 @@ export function RecordPaymentModal({ isOpen, onClose, bill }: RecordPaymentModal
   const pendingAmount = Number(bill?.grand_total || 0) - Number(bill?.paid_amount || 0)
 
   const form = useForm<PaymentFormValues>({
-    resolver: zodResolver(paymentSchema),
+    resolver: zodResolver(paymentSchema) as Resolver<PaymentFormValues>,
     defaultValues: {
       bill_id: bill?.id,
       payment_date: new Date(),
@@ -149,7 +149,7 @@ export function RecordPaymentModal({ isOpen, onClose, bill }: RecordPaymentModal
                           disabled={(date) =>
                             date > new Date() || date < new Date("1900-01-01")
                           }
-                          initialFocus
+                          autoFocus
                         />
                       </PopoverContent>
                     </Popover>
