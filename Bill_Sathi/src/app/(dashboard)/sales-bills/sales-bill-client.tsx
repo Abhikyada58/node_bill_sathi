@@ -233,11 +233,11 @@ export function SalesBillClient({ initialData }: SalesBillClientProps) {
                 </div>
               </div>
 
-              <div className="flex gap-2 pt-2 border-t mt-2">
-                <Button variant="outline" className="w-full text-red-500 hover:text-red-600" onClick={resetFilters}>
+              <div className="flex justify-end gap-2 pt-4 border-t mt-4">
+                <Button variant="outline" className="text-red-500 border-red-200 hover:bg-red-50" onClick={resetFilters}>
                   RESET
                 </Button>
-                <Button className="w-full bg-green-500 hover:bg-green-600" onClick={() => setPopoverOpen(false)}>
+                <Button variant="outline" className="text-green-600 border-green-500 hover:bg-green-50" onClick={() => setPopoverOpen(false)}>
                   APPLY
                 </Button>
               </div>
