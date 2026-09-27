@@ -50,7 +50,7 @@ export default function RegisterPage() {
     <Card>
       <CardHeader>
         <CardTitle>Create an account</CardTitle>
-        <CardDescription>Start managing your billing with Bill Sathi</CardDescription>
+        <CardDescription>Start managing your billing with Bill Laxmi</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>

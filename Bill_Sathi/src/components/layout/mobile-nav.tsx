@@ -28,7 +28,7 @@ export function MobileNav() {
       <DialogContent className="p-0 sm:max-w-xs" showCloseButton>
         <DialogTitle className="flex items-center gap-2 border-b px-6 py-4 font-semibold">
           <Wallet className="size-5 text-primary" />
-          Bill Sathi
+          Bill Laxmi
         </DialogTitle>
         <nav className="space-y-1 p-3">
           {navItems.map((item) => {

@@ -13,7 +13,7 @@ export function Sidebar() {
     <aside className="hidden w-64 shrink-0 flex-col border-r bg-sidebar text-sidebar-foreground md:flex">
       <div className="flex h-16 items-center gap-2 border-b px-6 font-semibold">
         <Wallet className="size-5 text-primary" />
-        <span>Bill Sathi</span>
+        <span>Bill Laxmi</span>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {navItems.map((item) => {

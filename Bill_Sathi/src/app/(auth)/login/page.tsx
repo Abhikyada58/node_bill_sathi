@@ -45,7 +45,7 @@ export default function LoginPage() {
     <Card>
       <CardHeader>
         <CardTitle>Welcome back</CardTitle>
-        <CardDescription>Sign in to your Bill Sathi account</CardDescription>
+        <CardDescription>Sign in to your Bill Laxmi account</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>

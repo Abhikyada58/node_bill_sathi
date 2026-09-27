@@ -1,4 +1,4 @@
-# Bill Sathi
+# Bill Laxmi
 
 Finance ERP dashboard — sales bills, purchase bills, parties, products, expenses and transactions.
 
