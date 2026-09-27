@@ -174,3 +174,56 @@ export async function deleteSalesBill(id: number) {
 }
 
 
+
+export async function updateSalesBill(id: number, input: unknown) {
+  const parsed = salesBillSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const supabase = await createClient();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user) return { error: "Unauthorized" };
+
+  const { items, ...billData } = parsed.data;
+
+  // Update bill
+  const { error: billError } = await supabase
+    .from("sales_bills")
+    .update({
+      ...billData,
+      bill_date: billData.bill_date.toISOString().split("T")[0],
+      due_date: billData.due_date.toISOString().split("T")[0],
+      challan_date: billData.challan_date ? billData.challan_date.toISOString().split("T")[0] : null,
+    })
+    .eq("id", id)
+    .eq("user_id", userData.user.id);
+
+  if (billError) return { error: billError.message };
+
+  // Sync items: first delete all existing items for this bill
+  const { error: deleteError } = await supabase
+    .from("sales_bill_items")
+    .delete()
+    .eq("sales_bill_id", id);
+
+  if (deleteError) return { error: deleteError.message };
+
+  // Insert the new items
+  const itemsToInsert = items.map(item => ({
+    ...item,
+    sales_bill_id: id,
+  }));
+
+  const { error: itemsError } = await supabase
+    .from("sales_bill_items")
+    .insert(itemsToInsert);
+
+  if (itemsError) {
+    return { error: itemsError.message };
+  }
+
+  revalidatePath("/sales-bills");
+  return { success: true };
+}
+

@@ -20,35 +20,36 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
 
 import { salesBillSchema, SalesBillFormValues } from "@/lib/validations/sales-bill"
-import { createSalesBill } from "@/actions/sales-bills"
+import { createSalesBill, updateSalesBill } from "@/actions/sales-bills"
 
 interface SalesBillFormProps {
   parties: any[]
   products: any[]
+  initialData?: any
 }
 
-export function SalesBillForm({ parties, products }: SalesBillFormProps) {
+export function SalesBillForm({ parties, products, initialData }: SalesBillFormProps) {
   const router = useRouter()
 
   const form = useForm<SalesBillFormValues>({
     resolver: zodResolver(salesBillSchema) as Resolver<SalesBillFormValues>,
     defaultValues: {
-      customer_id: 0,
-      bill_number: "",
-      bill_date: new Date(),
-      due_days: 45,
-      due_date: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000),
-      apply_gst: true,
-      discount_percent: 0,
-      discount_amount: 0,
-      gst_percent: 5, // Default GST example
-      gst_amount: 0,
-      taxable_amount: 0,
-      grand_total: 0,
-      tds_tcs_type: "NONE",
-      tds_tcs_percent: 0,
-      tds_tcs_amount: 0,
-      items: [
+      customer_id: initialData?.customer_id || 0,
+      bill_number: initialData?.bill_number || "",
+      bill_date: initialData ? new Date(initialData.bill_date) : new Date(),
+      due_days: initialData?.due_days || 45,
+      due_date: initialData ? new Date(initialData.due_date) : new Date(Date.now() + 45 * 24 * 60 * 60 * 1000),
+      apply_gst: initialData?.apply_gst ?? true,
+      discount_percent: initialData?.discount_percent || 0,
+      discount_amount: initialData?.discount_amount || 0,
+      gst_percent: initialData?.gst_percent || 5, // Default GST example
+      gst_amount: initialData?.gst_amount || 0,
+      taxable_amount: initialData?.taxable_amount || 0,
+      grand_total: initialData?.grand_total || 0,
+      tds_tcs_type: initialData?.tds_tcs_type || "NONE",
+      tds_tcs_percent: initialData?.tds_tcs_percent || 0,
+      tds_tcs_amount: initialData?.tds_tcs_amount || 0,
+      items: initialData?.sales_bill_items?.length ? initialData.sales_bill_items : [
         { product_id: 0, product_name: "", quantity: 1, rate: 0, amount: 0, unit: "Pcs" }
       ],
     }
@@ -147,11 +148,17 @@ export function SalesBillForm({ parties, products }: SalesBillFormProps) {
       return
     }
 
-    const res = await createSalesBill(data)
+    let res;
+    if (initialData?.id) {
+      res = await updateSalesBill(initialData.id, data)
+    } else {
+      res = await createSalesBill(data)
+    }
+
     if (res.error) {
       toast.error(res.error)
     } else {
-      toast.success("Sales Bill created successfully")
+      toast.success(initialData?.id ? "Sales Bill updated successfully" : "Sales Bill created successfully")
       router.push("/sales-bills")
       router.refresh()
     }

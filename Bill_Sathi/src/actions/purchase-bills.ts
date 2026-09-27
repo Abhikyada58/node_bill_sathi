@@ -98,3 +98,58 @@ export async function getPurchaseBillById(id: number) {
   return data
 }
 
+
+export async function updatePurchaseBill(id: number, input: unknown) {
+  const parsed = purchaseBillSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const supabase = await createClient();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user) return { error: "Unauthorized" };
+
+  const { items, ...billData } = parsed.data;
+
+  // Update bill
+  const { error: billError } = await supabase
+    .from("purchases")
+    .update({
+      ...billData,
+      bill_date: billData.bill_date.toISOString().split("T")[0],
+      due_date: billData.due_date.toISOString().split("T")[0],
+    })
+    .eq("id", id)
+    .eq("user_id", userData.user.id);
+
+  if (billError) return { error: billError.message };
+
+  // Sync items: first delete all existing items for this bill
+  const { error: deleteError } = await supabase
+    .from("purchase_bill_items")
+    .delete()
+    .eq("purchase_bill_id", id);
+
+  if (deleteError) return { error: deleteError.message };
+
+  // Insert the new items
+  const itemsToInsert = items.map((item: any) => {
+    const { discount_percent, ...itemData } = item;
+    return {
+      ...itemData,
+      purchase_bill_id: id,
+    };
+  });
+
+  const { error: itemsError } = await supabase
+    .from("purchase_bill_items")
+    .insert(itemsToInsert);
+
+  if (itemsError) {
+    return { error: itemsError.message };
+  }
+
+  revalidatePath("/purchase-bills");
+  return { success: true };
+}
+

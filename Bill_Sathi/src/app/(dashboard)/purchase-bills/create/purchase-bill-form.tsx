@@ -20,32 +20,33 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
 
 import { purchaseBillSchema, PurchaseBillFormValues } from "@/lib/validations/purchase-bill"
-import { createPurchaseBill } from "@/actions/purchase-bills"
+import { createPurchaseBill, updatePurchaseBill } from "@/actions/purchase-bills"
 
 interface PurchaseBillFormProps {
   parties: any[]
   products: any[]
+  initialData?: any
 }
 
-export function PurchaseBillForm({ parties, products }: PurchaseBillFormProps) {
+export function PurchaseBillForm({ parties, products, initialData }: PurchaseBillFormProps) {
   const router = useRouter()
 
   const form = useForm<PurchaseBillFormValues>({
     resolver: zodResolver(purchaseBillSchema) as Resolver<PurchaseBillFormValues>,
     defaultValues: {
-      supplier_id: 0,
-      bill_number: "",
-      bill_date: new Date(),
-      due_days: 0,
-      due_date: new Date(),
-      apply_gst: false,
-      discount_percent: 0,
-      discount_amount: 0,
-      gst_percent: 0,
-      gst_amount: 0,
-      taxable_amount: 0,
-      amount: 0,
-      items: [
+      supplier_id: initialData?.supplier_id || 0,
+      bill_number: initialData?.bill_number || "",
+      bill_date: initialData ? new Date(initialData.bill_date) : new Date(),
+      due_days: initialData?.due_days || 0,
+      due_date: initialData ? new Date(initialData.due_date) : new Date(),
+      apply_gst: initialData?.apply_gst ?? false,
+      discount_percent: initialData?.discount_percent || 0,
+      discount_amount: initialData?.discount_amount || 0,
+      gst_percent: initialData?.gst_percent || 0,
+      gst_amount: initialData?.gst_amount || 0,
+      taxable_amount: initialData?.taxable_amount || 0,
+      amount: initialData?.amount || 0,
+      items: initialData?.purchase_bill_items?.length ? initialData.purchase_bill_items : [
         { product_id: 0, product_name: "", quantity: 1, rate: 0, discount_percent: 0, amount: 0, unit: "Pcs" }
       ],
     }
@@ -99,7 +100,7 @@ export function PurchaseBillForm({ parties, products }: PurchaseBillFormProps) {
     let netAmount = 0
     let totalDiscount = 0
 
-    items.forEach(item => {
+    items.forEach((item: any) => {
       const qty = Number(item.quantity) || 0
       const rate = Number(item.rate) || 0
       const discountP = Number(item.discount_percent) || 0
@@ -138,11 +139,17 @@ export function PurchaseBillForm({ parties, products }: PurchaseBillFormProps) {
       return
     }
 
-    const res = await createPurchaseBill(data)
+    let res;
+    if (initialData?.id) {
+      res = await updatePurchaseBill(initialData.id, data)
+    } else {
+      res = await createPurchaseBill(data)
+    }
+
     if (res.error) {
       toast.error(res.error)
     } else {
-      toast.success("Purchase Bill created successfully")
+      toast.success(initialData?.id ? "Purchase Bill updated successfully" : "Purchase Bill created successfully")
       router.push("/purchase-bills")
       router.refresh()
     }
