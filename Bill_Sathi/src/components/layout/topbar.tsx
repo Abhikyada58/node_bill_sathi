@@ -30,20 +30,36 @@ export async function Topbar() {
   } = await supabase.auth.getUser();
 
   const { data: profile } = user
-    ? await supabase.from("profiles").select("full_name, email").eq("id", user.id).single()
+    ? await supabase.from("profiles").select("full_name, email, shop_name").eq("id", user.id).single()
     : { data: null };
 
   const displayName = profile?.full_name ?? user?.email ?? "Account";
+  const shopName = profile?.shop_name || profile?.full_name || "SHREE KHODIYAR TEX";
 
   return (
-    <header className="flex h-16 items-center justify-between gap-4 border-b bg-background px-4 md:px-6">
-      <MobileNav />
+    <header className="flex h-16 items-center justify-between gap-4 border-b bg-[#007bff] text-white px-4 md:px-6">
+      <div className="flex items-center gap-4">
+        <MobileNav />
+        {/* We can hide standard mobile nav toggle here if we wanted, but we keep it */}
+        
+        {/* Shop Name Badge */}
+        <div className="flex items-center gap-2 bg-[#4da3ff] hover:bg-[#66b3ff] transition-colors rounded-lg px-3 py-2 cursor-pointer shadow-sm">
+          <div className="bg-white rounded-md w-6 h-6 flex items-center justify-center font-bold text-[#007bff] text-sm">
+            {shopName.charAt(0).toUpperCase()}
+          </div>
+          <span className="font-bold text-sm tracking-wide">
+            {shopName.toUpperCase()}
+          </span>
+        </div>
+      </div>
+      
       <div className="flex-1" />
+      
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="flex items-center gap-2 px-2">
-            <Avatar className="size-8">
-              <AvatarFallback>{initials(displayName)}</AvatarFallback>
+          <Button variant="ghost" className="flex items-center gap-2 px-2 hover:bg-[#0056b3] text-white hover:text-white">
+            <Avatar className="size-8 border-2 border-white/20">
+              <AvatarFallback className="bg-[#0056b3] text-white">{initials(displayName)}</AvatarFallback>
             </Avatar>
             <span className="hidden text-sm font-medium sm:inline">{displayName}</span>
           </Button>
