@@ -114,9 +114,11 @@ export function SalesBillClient({ initialData }: SalesBillClientProps) {
                               <Printer className="h-4 w-4 text-slate-500" />
                             </Button>
                           </Link>
-                          <Button variant="ghost" size="icon">
-                            <Download className="h-4 w-4" />
-                          </Button>
+                          <Link href={`/sales-bills/${bill.id}/print?download=true`}>
+                            <Button variant="ghost" size="icon">
+                              <Download className="h-4 w-4 text-slate-500" />
+                            </Button>
+                          </Link>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon">

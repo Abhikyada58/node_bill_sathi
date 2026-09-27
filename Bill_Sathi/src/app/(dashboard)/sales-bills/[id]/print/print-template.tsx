@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { format } from "date-fns"
 import { numberToWords } from "@/lib/number-to-words"
 
@@ -10,15 +10,59 @@ interface PrintTemplateProps {
 }
 
 export function PrintTemplate({ bill, profile }: PrintTemplateProps) {
-  
-  // Auto print on load (optional but helpful)
+  const [isDownload, setIsDownload] = useState(false)
+
   useEffect(() => {
-    // We delay slightly to allow rendering and styles to apply
-    const timer = setTimeout(() => {
-      window.print()
-    }, 500)
-    return () => clearTimeout(timer)
+    const searchParams = new URLSearchParams(window.location.search)
+    const downloadParam = searchParams.get("download") === "true"
+    setIsDownload(downloadParam)
+
+    if (downloadParam) {
+      const timer = setTimeout(() => {
+        handleDownload()
+      }, 500)
+      return () => clearTimeout(timer)
+    } else {
+      const timer = setTimeout(() => {
+        window.print()
+      }, 500)
+      return () => clearTimeout(timer)
+    }
   }, [])
+
+  const handleDownload = async () => {
+    const element = document.getElementById("invoice-capture")
+    if (!element) return
+
+    try {
+      const { toPng } = await import("html-to-image")
+      const { jsPDF } = await import("jspdf")
+
+      // Generate image natively via browser (bypasses html2canvas css parsing errors)
+      const dataUrl = await toPng(element, { quality: 0.98, pixelRatio: 2 })
+      
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "pt",
+        format: "a4"
+      })
+
+      // Calculate dimensions to fit A4 width
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth
+
+      // Add a tiny margin (e.g., 20 points)
+      const margin = 20;
+      const printWidth = pdfWidth - (margin * 2);
+      const printHeight = (element.offsetHeight * printWidth) / element.offsetWidth;
+
+      pdf.addImage(dataUrl, "PNG", margin, margin, printWidth, printHeight)
+      pdf.save(`Invoice_${bill.bill_number}.pdf`)
+    } catch (err) {
+      console.error("PDF generation failed", err)
+      alert("Failed to download PDF. Please use the Print option instead.")
+    }
+  }
 
   const party = bill.parties
   const items = bill.sales_bill_items || []
@@ -45,8 +89,8 @@ export function PrintTemplate({ bill, profile }: PrintTemplateProps) {
   return (
     <div className="bg-white text-black text-sm p-8 print:p-0 w-full max-w-4xl mx-auto font-sans">
       
-      {/* Container with main outer border */}
-      <div className="border border-black">
+      {/* Container with main outer border - this is what gets converted to PDF */}
+      <div id="invoice-capture" className="border border-black p-[2px]">
         
         {/* HEADER SECTION */}
         <div className="text-center py-6 bg-gray-100 border-b border-black">
@@ -245,6 +289,12 @@ export function PrintTemplate({ bill, profile }: PrintTemplateProps) {
       
       {/* Hide print buttons when actually printing */}
       <div className="mt-8 flex justify-center gap-4 print:hidden">
+        <button 
+          onClick={handleDownload}
+          className="bg-green-600 text-white px-6 py-2 rounded font-medium hover:bg-green-700 transition"
+        >
+          Download PDF
+        </button>
         <button 
           onClick={() => window.print()}
           className="bg-blue-600 text-white px-6 py-2 rounded font-medium hover:bg-blue-700 transition"
