@@ -1,16 +1,21 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import Link from "next/link"
 import { format } from "date-fns"
-import { Plus, MoreVertical, Printer, Download, CreditCard, Edit, Trash } from "lucide-react"
+import { Plus, MoreVertical, Printer, Download, CreditCard, Edit, Trash, Filter, FileSpreadsheet, X } from "lucide-react"
 import { toast } from "sonner"
+import * as XLSX from "xlsx"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
 import { deleteSalesBill } from "@/actions/sales-bills"
 import { RecordPaymentModal } from "./record-payment-modal"
 
@@ -24,6 +29,17 @@ export function SalesBillClient({ initialData }: SalesBillClientProps) {
   const [bills, setBills] = useState(initialData)
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [selectedBill, setSelectedBill] = useState<SalesBill | null>(null)
+  
+  // Filter States
+  const [search, setSearch] = useState("")
+  const [fromDate, setFromDate] = useState("")
+  const [toDate, setToDate] = useState("")
+  const [partySearch, setPartySearch] = useState("")
+  const [statusFilter, setStatusFilter] = useState("ALL")
+  const [billNoFilter, setBillNoFilter] = useState("")
+  const [sortBy, setSortBy] = useState("Date")
+  const [sortOrder, setSortOrder] = useState("Desc")
+  const [popoverOpen, setPopoverOpen] = useState(false)
 
   const handleDelete = async (id: number) => {
     if (!confirm("Are you sure you want to delete this bill?")) return
@@ -42,16 +58,199 @@ export function SalesBillClient({ initialData }: SalesBillClientProps) {
     setPaymentModalOpen(true)
   }
 
+  // Filter Logic
+  const filteredBills = useMemo(() => {
+    let filtered = [...bills]
+
+    // Search (General)
+    if (search) {
+      const q = search.toLowerCase()
+      filtered = filtered.filter(b => 
+        b.bill_number?.toLowerCase().includes(q) || 
+        b.parties?.name?.toLowerCase().includes(q) ||
+        b.grand_total?.toString().includes(q)
+      )
+    }
+
+    // Date Range
+    if (fromDate) {
+      filtered = filtered.filter(b => new Date(b.bill_date) >= new Date(fromDate))
+    }
+    if (toDate) {
+      filtered = filtered.filter(b => new Date(b.bill_date) <= new Date(toDate))
+    }
+
+    // Party Search
+    if (partySearch) {
+      filtered = filtered.filter(b => b.parties?.name?.toLowerCase().includes(partySearch.toLowerCase()))
+    }
+
+    // Status Filter
+    if (statusFilter !== "ALL") {
+      filtered = filtered.filter(b => b.status === statusFilter)
+    }
+
+    // Bill No Filter
+    if (billNoFilter) {
+      filtered = filtered.filter(b => b.bill_number?.toLowerCase().includes(billNoFilter.toLowerCase()))
+    }
+
+    // Sorting
+    filtered.sort((a, b) => {
+      let valA, valB
+      
+      if (sortBy === "Date") {
+        valA = new Date(a.bill_date).getTime()
+        valB = new Date(b.bill_date).getTime()
+      } else if (sortBy === "BillNo") {
+        valA = a.bill_number
+        valB = b.bill_number
+      } else if (sortBy === "TotalAmount") {
+        valA = Number(a.grand_total)
+        valB = Number(b.grand_total)
+      } else {
+        valA = a.id
+        valB = b.id
+      }
+
+      if (valA < valB) return sortOrder === "Asc" ? -1 : 1
+      if (valA > valB) return sortOrder === "Asc" ? 1 : -1
+      return 0
+    })
+
+    return filtered
+  }, [bills, search, fromDate, toDate, partySearch, statusFilter, billNoFilter, sortBy, sortOrder])
+
+  const handleExportExcel = () => {
+    const exportData = filteredBills.map(bill => ({
+      "Bill Date": format(new Date(bill.bill_date), "dd/MM/yyyy"),
+      "Bill No.": bill.bill_number,
+      "Party Name": bill.parties?.name || "",
+      "Bill Type": "TAX INVOICE",
+      "Total Amount": Number(bill.grand_total).toFixed(2),
+      "Pending Amount": (Number(bill.grand_total) - Number(bill.paid_amount)).toFixed(2),
+      "Status": bill.status,
+      "Due Days": bill.due_days
+    }))
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Sales Bills")
+    
+    XLSX.writeFile(workbook, "Sales_Bills_Export.xlsx")
+    toast.success("Excel exported successfully")
+  }
+
+  const resetFilters = () => {
+    setSearch("")
+    setFromDate("")
+    setToDate("")
+    setPartySearch("")
+    setStatusFilter("ALL")
+    setBillNoFilter("")
+    setSortBy("Date")
+    setSortOrder("Desc")
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Sales Bill</h2>
-        <Link href="/sales-bills/create">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            ADD BILL
+        
+        <div className="flex items-center gap-2">
+          {/* Export Button */}
+          <Button variant="outline" className="border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700" onClick={handleExportExcel}>
+            <FileSpreadsheet className="mr-2 h-4 w-4" />
+            Export Excel
           </Button>
-        </Link>
+
+          {/* Filter Popover */}
+          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Filter className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-80 p-4 space-y-4">
+              <div className="flex items-center justify-between font-semibold border-b pb-2">
+                Filter & Sort
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setPopoverOpen(false)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="space-y-3 text-sm">
+                <Input placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} />
+
+                <div className="flex items-center gap-2">
+                  <div className="space-y-1 w-full">
+                    <label className="text-xs text-muted-foreground">From Date</label>
+                    <Input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} />
+                  </div>
+                  <div className="space-y-1 w-full">
+                    <label className="text-xs text-muted-foreground">To Date</label>
+                    <Input type="date" value={toDate} onChange={e => setToDate(e.target.value)} />
+                  </div>
+                </div>
+
+                <Input placeholder="Search Party..." value={partySearch} onChange={e => setPartySearch(e.target.value)} />
+
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Payment Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">All Status</SelectItem>
+                    <SelectItem value="PAID">Paid</SelectItem>
+                    <SelectItem value="UNPAID">Unpaid</SelectItem>
+                    <SelectItem value="PARTIAL">Partial</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Input placeholder="Bill No." value={billNoFilter} onChange={e => setBillNoFilter(e.target.value)} />
+
+                <div className="flex items-center gap-2">
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Sort By" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Date">Date</SelectItem>
+                      <SelectItem value="BillNo">Bill No.</SelectItem>
+                      <SelectItem value="TotalAmount">Total Amount</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select value={sortOrder} onValueChange={setSortOrder}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Order" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Asc">Asc</SelectItem>
+                      <SelectItem value="Desc">Desc</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-2 border-t mt-2">
+                <Button variant="outline" className="w-full text-red-500 hover:text-red-600" onClick={resetFilters}>
+                  RESET
+                </Button>
+                <Button className="w-full bg-green-500 hover:bg-green-600" onClick={() => setPopoverOpen(false)}>
+                  APPLY
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <Link href="/sales-bills/create">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Plus className="mr-2 h-4 w-4" />
+              ADD BILL
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <Card>
@@ -71,14 +270,14 @@ export function SalesBillClient({ initialData }: SalesBillClientProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {bills.length === 0 ? (
+              {filteredBills.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={9} className="text-center h-24 text-muted-foreground">
-                    No sales bills found. Create one to get started.
+                    No matching bills found.
                   </TableCell>
                 </TableRow>
               ) : (
-                bills.map((bill) => {
+                filteredBills.map((bill) => {
                   const pendingAmount = Number(bill.grand_total) - Number(bill.paid_amount)
                   
                   return (
