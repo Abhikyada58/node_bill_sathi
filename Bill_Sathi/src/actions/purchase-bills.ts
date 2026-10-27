@@ -18,6 +18,48 @@ export async function getPurchaseBills() {
   return data
 }
 
+export async function getNextPurchaseBillNumber(): Promise<string> {
+  const supabase = await createClient()
+  const { data: userData } = await supabase.auth.getUser()
+  if (!userData?.user) return "PUR-001"
+
+  const { data, error } = await supabase
+    .from("purchases")
+    .select("bill_number")
+    .eq("user_id", userData.user.id)
+    .order("created_at", { ascending: false })
+    .limit(50)
+
+  if (error || !data || data.length === 0) {
+    return "PUR-001"
+  }
+
+  let maxNum = 0
+  let prefix = "PUR-"
+  let padLength = 3
+
+  for (const row of data) {
+    const billNum = (row.bill_number ?? "").toString().trim()
+    const match = billNum.match(/^(.*?)(\d+)$/)
+    if (match) {
+      const p = match[1]
+      const num = parseInt(match[2], 10)
+      if (num > maxNum) {
+        maxNum = num
+        prefix = p
+        padLength = match[2].length
+      }
+    }
+  }
+
+  if (maxNum > 0) {
+    const nextNum = (maxNum + 1).toString().padStart(padLength, "0")
+    return `${prefix}${nextNum}`
+  }
+
+  return `PUR-${(data.length + 1).toString().padStart(3, "0")}`
+}
+
 export async function createPurchaseBill(input: unknown) {
   const parsed = purchaseBillSchema.safeParse(input)
   if (!parsed.success) {
@@ -28,7 +70,7 @@ export async function createPurchaseBill(input: unknown) {
   const { data: userData, error: userError } = await supabase.auth.getUser()
   if (userError || !userData.user) return { error: "Unauthorized" }
 
-  const { items, ...billData } = parsed.data
+  const { items, id: _billId, ...billData } = parsed.data
   
   // Create bill
   const { data: bill, error: billError } = await supabase
@@ -45,11 +87,9 @@ export async function createPurchaseBill(input: unknown) {
 
   if (billError) return { error: billError.message }
 
-  // Create items
+  // Create items without 'id'
   const itemsToInsert = items.map((item: any) => {
-    // Note: discount_percent isn't in the purchase_bill_items schema, 
-    // so we omit it before inserting.
-    const { discount_percent, ...itemData } = item;
+    const { id: _itemId, discount_percent, ...itemData } = item;
     return {
       ...itemData,
       purchase_bill_id: bill.id,
@@ -98,7 +138,6 @@ export async function getPurchaseBillById(id: number) {
   return data
 }
 
-
 export async function updatePurchaseBill(id: number, input: unknown) {
   const parsed = purchaseBillSchema.safeParse(input);
   if (!parsed.success) {
@@ -109,9 +148,9 @@ export async function updatePurchaseBill(id: number, input: unknown) {
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData.user) return { error: "Unauthorized" };
 
-  const { items, ...billData } = parsed.data;
+  const { items, id: _billId, ...billData } = parsed.data;
 
-  // Update bill
+  // Update bill without 'id'
   const { error: billError } = await supabase
     .from("purchases")
     .update({
@@ -132,9 +171,9 @@ export async function updatePurchaseBill(id: number, input: unknown) {
 
   if (deleteError) return { error: deleteError.message };
 
-  // Insert the new items
+  // Insert the new items without 'id'
   const itemsToInsert = items.map((item: any) => {
-    const { discount_percent, ...itemData } = item;
+    const { id: _itemId, discount_percent, ...itemData } = item;
     return {
       ...itemData,
       purchase_bill_id: id,
@@ -152,4 +191,3 @@ export async function updatePurchaseBill(id: number, input: unknown) {
   revalidatePath("/purchase-bills");
   return { success: true };
 }
-

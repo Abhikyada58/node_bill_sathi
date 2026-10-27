@@ -26,16 +26,17 @@ interface PurchaseBillFormProps {
   parties: any[]
   products: any[]
   initialData?: any
+  nextBillNumber?: string
 }
 
-export function PurchaseBillForm({ parties, products, initialData }: PurchaseBillFormProps) {
+export function PurchaseBillForm({ parties, products, initialData, nextBillNumber }: PurchaseBillFormProps) {
   const router = useRouter()
 
   const form = useForm<PurchaseBillFormValues>({
     resolver: zodResolver(purchaseBillSchema) as Resolver<PurchaseBillFormValues>,
     defaultValues: {
       supplier_id: initialData?.supplier_id || 0,
-      bill_number: initialData?.bill_number || "",
+      bill_number: initialData?.bill_number || nextBillNumber || "PUR-001",
       bill_date: initialData ? new Date(initialData.bill_date) : new Date(),
       due_days: initialData?.due_days || 0,
       due_date: initialData ? new Date(initialData.due_date) : new Date(),
@@ -58,6 +59,12 @@ export function PurchaseBillForm({ parties, products, initialData }: PurchaseBil
   })
 
   const items = form.watch("items")
+
+  useEffect(() => {
+    if (!initialData && nextBillNumber && !form.getValues("bill_number")) {
+      form.setValue("bill_number", nextBillNumber)
+    }
+  }, [nextBillNumber, initialData, form])
   const applyGst = form.watch("apply_gst")
   const billDate = form.watch("bill_date")
   const dueDays = form.watch("due_days")
@@ -312,7 +319,10 @@ export function PurchaseBillForm({ parties, products, initialData }: PurchaseBil
                   {fields.map((field, index) => (
                     <tr key={field.id} className="border-b">
                       <td className="p-2">
-                        <Select onValueChange={(val) => handleProductSelect(index, val)}>
+                        <Select 
+                          value={form.watch(`items.${index}.product_id`) && Number(form.watch(`items.${index}.product_id`)) > 0 ? String(form.watch(`items.${index}.product_id`)) : undefined} 
+                          onValueChange={(val) => handleProductSelect(index, val)}
+                        >
                           <SelectTrigger className="h-9">
                             <SelectValue placeholder="Select" />
                           </SelectTrigger>

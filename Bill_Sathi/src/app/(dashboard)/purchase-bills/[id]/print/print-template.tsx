@@ -89,7 +89,7 @@ export function PurchasePrintTemplate({ bill, profile }: PurchasePrintTemplatePr
         PURCHASE BILL
       </div>
 
-      <div id="invoice-capture" className="border-2 border-black">
+      <div id="invoice-capture" className="border-2 border-black min-h-[1040px] flex flex-col justify-between bg-white">
         
         {/* HEADER SECTION */}
         <div className="flex border-b-2 border-black">
@@ -143,7 +143,7 @@ export function PurchasePrintTemplate({ bill, profile }: PurchasePrintTemplatePr
             </thead>
             <tbody>
               {/* Ensure table is tall enough like the screenshot */}
-              <tr className="h-96 align-top">
+              <tr className="min-h-[500px] h-[500px] align-top">
                 <td className="p-1 border-r-2 border-black">
                   {items.map((_: any, i: number) => <div key={i} className="mb-1">{i + 1}</div>)}
                 </td>

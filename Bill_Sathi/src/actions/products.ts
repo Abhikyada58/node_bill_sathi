@@ -27,10 +27,12 @@ export async function createProduct(input: unknown) {
   const { data: userData, error: userError } = await supabase.auth.getUser()
   if (userError || !userData.user) return { error: "Unauthorized" }
 
+  const { id: _id, ...productData } = parsed.data
+
   const { error } = await supabase
     .from("products")
     .insert({
-      ...parsed.data,
+      ...productData,
       category: "General", // Default value
       user_id: userData.user.id
     })
@@ -48,10 +50,11 @@ export async function updateProduct(id: number, input: unknown) {
   }
 
   const supabase = await createClient()
+  const { id: _id, ...productData } = parsed.data
   
   const { error } = await supabase
     .from("products")
-    .update(parsed.data)
+    .update(productData)
     .eq("id", id)
 
   if (error) return { error: error.message }

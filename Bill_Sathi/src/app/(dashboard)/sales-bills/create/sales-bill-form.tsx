@@ -26,16 +26,17 @@ interface SalesBillFormProps {
   parties: any[]
   products: any[]
   initialData?: any
+  nextBillNumber?: string
 }
 
-export function SalesBillForm({ parties, products, initialData }: SalesBillFormProps) {
+export function SalesBillForm({ parties, products, initialData, nextBillNumber }: SalesBillFormProps) {
   const router = useRouter()
 
   const form = useForm<SalesBillFormValues>({
     resolver: zodResolver(salesBillSchema) as Resolver<SalesBillFormValues>,
     defaultValues: {
       customer_id: initialData?.customer_id || 0,
-      bill_number: initialData?.bill_number || "",
+      bill_number: initialData?.bill_number || nextBillNumber || "INV-001",
       bill_date: initialData ? new Date(initialData.bill_date) : new Date(),
       due_days: initialData?.due_days || 45,
       due_date: initialData ? new Date(initialData.due_date) : new Date(Date.now() + 45 * 24 * 60 * 60 * 1000),
@@ -69,6 +70,12 @@ export function SalesBillForm({ parties, products, initialData }: SalesBillFormP
   const tdsTcsPercent = form.watch("tds_tcs_percent")
   const billDate = form.watch("bill_date")
   const dueDays = form.watch("due_days")
+
+  useEffect(() => {
+    if (!initialData && nextBillNumber && !form.getValues("bill_number")) {
+      form.setValue("bill_number", nextBillNumber)
+    }
+  }, [nextBillNumber, initialData, form])
 
   // Handle due date calculation
   useEffect(() => {
@@ -282,7 +289,10 @@ export function SalesBillForm({ parties, products, initialData }: SalesBillFormP
                   {fields.map((field, index) => (
                     <tr key={field.id} className="border-b">
                       <td className="p-2">
-                        <Select onValueChange={(val) => handleProductSelect(index, val)}>
+                        <Select 
+                          value={form.watch(`items.${index}.product_id`) && Number(form.watch(`items.${index}.product_id`)) > 0 ? String(form.watch(`items.${index}.product_id`)) : undefined} 
+                          onValueChange={(val) => handleProductSelect(index, val)}
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Select" />
                           </SelectTrigger>

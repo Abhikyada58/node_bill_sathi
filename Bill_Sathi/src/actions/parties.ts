@@ -59,10 +59,12 @@ export async function createParty(input: unknown) {
   const { data: userData, error: userError } = await supabase.auth.getUser()
   if (userError || !userData.user) return { error: "Unauthorized" }
 
+  const { id: _id, ...partyData } = parsed.data
+
   const { error } = await supabase
     .from("parties")
     .insert({
-      ...parsed.data,
+      ...partyData,
       user_id: userData.user.id
     })
 
@@ -79,10 +81,11 @@ export async function updateParty(id: number, input: unknown) {
   }
 
   const supabase = await createClient()
+  const { id: _id, ...partyData } = parsed.data
   
   const { error } = await supabase
     .from("parties")
-    .update(parsed.data)
+    .update(partyData)
     .eq("id", id)
 
   if (error) return { error: error.message }

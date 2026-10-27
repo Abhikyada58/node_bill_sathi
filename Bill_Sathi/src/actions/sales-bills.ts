@@ -18,6 +18,48 @@ export async function getSalesBills() {
   return data
 }
 
+export async function getNextSalesBillNumber(): Promise<string> {
+  const supabase = await createClient()
+  const { data: userData } = await supabase.auth.getUser()
+  if (!userData?.user) return "INV-001"
+
+  const { data, error } = await supabase
+    .from("sales_bills")
+    .select("bill_number")
+    .eq("user_id", userData.user.id)
+    .order("created_at", { ascending: false })
+    .limit(50)
+
+  if (error || !data || data.length === 0) {
+    return "INV-001"
+  }
+
+  let maxNum = 0
+  let prefix = "INV-"
+  let padLength = 3
+
+  for (const row of data) {
+    const billNum = (row.bill_number ?? "").toString().trim()
+    const match = billNum.match(/^(.*?)(\d+)$/)
+    if (match) {
+      const p = match[1]
+      const num = parseInt(match[2], 10)
+      if (num > maxNum) {
+        maxNum = num
+        prefix = p
+        padLength = match[2].length
+      }
+    }
+  }
+
+  if (maxNum > 0) {
+    const nextNum = (maxNum + 1).toString().padStart(padLength, "0")
+    return `${prefix}${nextNum}`
+  }
+
+  return `INV-${(data.length + 1).toString().padStart(3, "0")}`
+}
+
 export async function getSalesBillById(id: number) {
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -66,7 +108,7 @@ export async function createSalesBill(input: unknown) {
   const { data: userData, error: userError } = await supabase.auth.getUser()
   if (userError || !userData.user) return { error: "Unauthorized" }
 
-  const { items, ...billData } = parsed.data
+  const { items, id: _billId, ...billData } = parsed.data
   
   // Create bill
   const { data: bill, error: billError } = await supabase
@@ -84,11 +126,14 @@ export async function createSalesBill(input: unknown) {
 
   if (billError) return { error: billError.message }
 
-  // Create items
-  const itemsToInsert = items.map(item => ({
-    ...item,
-    sales_bill_id: bill.id,
-  }))
+  // Create items without 'id' so Postgres can auto-generate identity
+  const itemsToInsert = items.map(item => {
+    const { id: _itemId, ...itemData } = item;
+    return {
+      ...itemData,
+      sales_bill_id: bill.id,
+    };
+  })
 
   const { error: itemsError } = await supabase
     .from("sales_bill_items")
@@ -173,8 +218,6 @@ export async function deleteSalesBill(id: number) {
   return { success: true }
 }
 
-
-
 export async function updateSalesBill(id: number, input: unknown) {
   const parsed = salesBillSchema.safeParse(input);
   if (!parsed.success) {
@@ -185,9 +228,9 @@ export async function updateSalesBill(id: number, input: unknown) {
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData.user) return { error: "Unauthorized" };
 
-  const { items, ...billData } = parsed.data;
+  const { items, id: _billId, ...billData } = parsed.data;
 
-  // Update bill
+  // Update bill without 'id'
   const { error: billError } = await supabase
     .from("sales_bills")
     .update({
@@ -209,11 +252,14 @@ export async function updateSalesBill(id: number, input: unknown) {
 
   if (deleteError) return { error: deleteError.message };
 
-  // Insert the new items
-  const itemsToInsert = items.map(item => ({
-    ...item,
-    sales_bill_id: id,
-  }));
+  // Insert the new items without 'id' so Postgres can generate new IDs
+  const itemsToInsert = items.map(item => {
+    const { id: _itemId, ...itemData } = item;
+    return {
+      ...itemData,
+      sales_bill_id: id,
+    };
+  });
 
   const { error: itemsError } = await supabase
     .from("sales_bill_items")
@@ -226,4 +272,3 @@ export async function updateSalesBill(id: number, input: unknown) {
   revalidatePath("/sales-bills");
   return { success: true };
 }
-

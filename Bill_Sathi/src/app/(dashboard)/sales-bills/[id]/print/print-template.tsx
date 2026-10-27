@@ -90,7 +90,7 @@ export function PrintTemplate({ bill, profile }: PrintTemplateProps) {
     <div className="bg-white text-black text-sm p-8 print:p-0 w-full max-w-4xl mx-auto font-sans">
       
       {/* Container with main outer border - this is what gets converted to PDF */}
-      <div id="invoice-capture" className="border border-black p-[2px]">
+      <div id="invoice-capture" className="border border-black p-[2px] min-h-[1040px] flex flex-col justify-between bg-white">
         
         {/* HEADER SECTION */}
         <div className="text-center py-6 bg-gray-100 border-b border-black">
@@ -161,7 +161,7 @@ export function PrintTemplate({ bill, profile }: PrintTemplateProps) {
         </div>
 
         {/* TABLE SECTION */}
-        <div className="w-full">
+        <div className="w-full flex-1 flex flex-col">
           <table className="w-full text-xs text-left border-collapse">
             <thead>
               <tr className="border-b border-black font-semibold">
@@ -175,7 +175,7 @@ export function PrintTemplate({ bill, profile }: PrintTemplateProps) {
             </thead>
             <tbody>
               {/* Force a minimum height for the table body to match the layout */}
-              <tr className="h-64 align-top">
+              <tr className="min-h-[480px] h-[480px] align-top">
                 <td className="p-1 border-r border-black text-center">
                   {items.map((_: any, i: number) => <div key={i} className="mb-1">{i + 1}</div>)}
                 </td>
@@ -276,7 +276,7 @@ export function PrintTemplate({ bill, profile }: PrintTemplateProps) {
             </div>
             
             {/* Signature Box */}
-            <div className="flex-1 p-2 flex flex-col justify-end min-h-[60px]">
+            <div className="flex-1 p-2 flex flex-col justify-end min-h-[80px]">
               <div className="flex justify-between items-end">
                 <span className="font-bold">Signature :</span>
                 <span className="border-b border-dotted border-gray-400 w-24"></span>
